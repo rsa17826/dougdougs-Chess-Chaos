@@ -6497,21 +6497,23 @@ function fn(i, o = "") {
   })
 }
 function nn(i = "") {
-  if (i === q()) {
-    console.log(
-      "We were the ones who initiated the rule choice, so we are ignoring this event"
-    )
-    return
-  }
+  // if (i === q()) {
+  //   console.log(
+  //     "We were the ones who initiated the rule choice, so we are ignoring this event"
+  //   )
+  //   return
+  // }
   wt()
   document.getElementById("viewport").classList.remove("choices-mode")
   document.getElementById("new-rules").classList.add("hidden")
   ie.fitAndCenterContent(G, G)
 }
 const bs = document.getElementById("password-form")
-bs.addEventListener("submit", async (i) => {
+async function subpass(i) {
+  if (i)
   i.preventDefault()
   H = document.getElementById("password-input").value
+  localStorage.p=H
   const o = await bt("/api/auth", {
     clientSecret: H,
   })
@@ -6523,7 +6525,12 @@ bs.addEventListener("submit", async (i) => {
     document.getElementById("password-error").textContent =
       "Invalid Password!"
   }
-})
+}
+if (localStorage.p){
+  document.getElementById("password-input").value=localStorage.p
+  subpass()
+}
+bs.addEventListener("submit", subpass)
 async function vs() {
   Ti()
   es()
