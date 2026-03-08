@@ -6573,7 +6573,7 @@ function startGameStatePolling() {
     } catch (e) {
       console.error("Game state polling error:", e)
     }
-  }, 3000)
+  }, 300)
 }
 
 var lastGameState = null
@@ -6587,7 +6587,3 @@ function gameStateChanged(newState) {
     )
   return JSON.stringify(lastGameState) !== JSON.stringify(newState)
 }
-// TODO
-// what happens when a user picks a rule
-
-// what happens with nextTurnWithNewRules

@@ -13,46 +13,82 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import uuid
 import random
 import traceback
+from copy import deepcopy
 
 # ============================================================================
 # GAME STATE - Stored in memory
 # ============================================================================
 
 GAME_PASSWORD = "password123"  # Change this!
+RULES_FILE = "rules.json"
 
-# Global game state
-game_state = {
-  "currentTurn": 1,
-  "currentPlayer": "white",
-  "currentRules": [],
-  "newRuleChoices": [
+def load_rules_from_file():
+  """Load custom rules from rules.json if available"""
+  try:
+    with open(RULES_FILE, 'r') as f:
+      data = json.load(f)
+      rules = data.get('rules', [])
+      if rules:
+        print(f"[Server] Loaded {len(rules)} custom rules from {RULES_FILE}", file=sys.stderr)
+        return rules
+  except FileNotFoundError:
+    print(f"[Server] {RULES_FILE} not found, using default rules", file=sys.stderr)
+  except json.JSONDecodeError:
+    print(f"[Server] Error parsing {RULES_FILE}, using default rules", file=sys.stderr)
+    
+  # Default rules
+  return [
     {
       "title": "Backwards Movement",
       "description": "Pieces can move backwards",
       "isInstant": False,
-      "turnsLeft": 3,
+      "turnsLeft": [3],
       "kingImmune": False,
     },
     {
       "title": "Double Jump",
       "description": "You can jump twice in one turn",
       "isInstant": False,
-      "turnsLeft": 5,
+      "turnsLeft": [5],
       "kingImmune": True,
     },
     {
       "title": "Teleport King",
       "description": "King can teleport to any empty square",
       "isInstant": True,
-      "turnsLeft": 1,
+      "turnsLeft": [1],
       "kingImmune": False,
     },
-  ],
-  "nextTurnWithNewRules": 5,
+  ]
+
+def get_random_rule_choices(all_rules, count=3):
+  """Get random rule choices from available rules"""
+  if not all_rules:
+    return []
+  selected = random.sample(all_rules, min(count, len(all_rules)))
+  # Normalize turnsLeft to single value (first one if it's an array)
+  for rule in selected:
+    if isinstance(rule.get('turnsLeft'), list):
+      rule['turnsLeft'] = rule['turnsLeft'][0]
+  return selected
+
+# Load all available rules
+AVAILABLE_RULES = load_rules_from_file()
+
+# Global game state
+game_state = {
+  "currentTurn": 1,
+  "currentPlayer": "white",
+  "currentRules": [],
+  "newRuleChoices": get_random_rule_choices(AVAILABLE_RULES),
+  "nextTurnWithNewRules": 3,  # New rules every 3 turns
   "ruleJustExpired": False,
   "boardState": {},  # Stores piece positions from all clients
   "lastPlayerToMove": None,  # Track which player made the last move
 }
+
+# Board state history for undo functionality
+board_state_history = []
 
 # Track authenticated sessions
 authenticated_clients = set()
@@ -61,6 +97,11 @@ authenticated_clients = set()
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
+
+
+def generate_user_id():
+  """Generate a unique user ID"""
+  return str(uuid.uuid4())[:8]
 
 
 def next_turn():
@@ -77,10 +118,11 @@ def next_turn():
   # Remove expired rules
   game_state["currentRules"] = [r for r in game_state["currentRules"] if r["turnsLeft"] > 0]
     
-  # Check if new rules should be added
+  # Check if new rules should be added (every 3 turns)
   if game_state["currentTurn"] >= game_state["nextTurnWithNewRules"]:
     game_state["ruleJustExpired"] = True
-    game_state["nextTurnWithNewRules"] = game_state["currentTurn"] + random.randint(3, 8)
+    game_state["newRuleChoices"] = get_random_rule_choices(AVAILABLE_RULES)
+    game_state["nextTurnWithNewRules"] = game_state["currentTurn"] + 3
 
 
 def select_rule(chosen_index):
@@ -90,9 +132,31 @@ def select_rule(chosen_index):
   if 0 <= chosen_index < len(game_state["newRuleChoices"]):
     chosen_rule = game_state["newRuleChoices"][chosen_index]
     game_state["currentRules"].append(chosen_rule.copy())
-    game_state["newRuleChoices"] = []
+    game_state["newRuleChoices"] = get_random_rule_choices(AVAILABLE_RULES)
+    game_state["newRuleChoices"]=[]
     return True
   return False
+
+
+def save_board_state():
+  """Save current board state to history for undo functionality"""
+  global game_state, board_state_history
+  # Deep copy the current board state
+  board_state_history.append(deepcopy(game_state["boardState"]))
+  print(f"[Undo History] Saved board state. History size: {len(board_state_history)}", file=sys.stderr)
+
+
+def undo_board_state():
+  """Restore previous board state and remove it from history"""
+  global game_state, board_state_history
+  if board_state_history:
+    previous_state = board_state_history.pop()
+    game_state["boardState"] = previous_state
+    print(f"[Undo] Restored previous board state. History size: {len(board_state_history)}", file=sys.stderr)
+    return True
+  else:
+    print(f"[Undo] No previous state to restore", file=sys.stderr)
+    return False
 
 
 # ============================================================================
@@ -123,6 +187,8 @@ class ChessServerHandler(BaseHTTPRequestHandler):
         self.handle_turns(data)
       elif self.path == "/api/board-state":
         self.handle_board_state(data)
+      elif self.path == "/api/undo":
+        self.handle_undo(data)
       else:
         self.send_error(404, "Not Found")
     except Exception as e:
@@ -156,6 +222,10 @@ class ChessServerHandler(BaseHTTPRequestHandler):
           })
         return
             
+      if clean_path == "/api/client-id":
+        self.send_json_response({"clientId": generate_user_id()})
+        return
+            
       if clean_path == "/api/game-state":
         client_secret = query_params.get("clientSecret", [""])[0]
         user_id = query_params.get("userId", [""])[0]
@@ -168,7 +238,13 @@ class ChessServerHandler(BaseHTTPRequestHandler):
         # Track the user ID
         if user_id:
           game_state["lastPlayerToMove"] = user_id
-                
+        if game_state["currentTurn"] >= game_state["nextTurnWithNewRules"]:
+          game_state["ruleJustExpired"] = True
+          game_state["newRuleChoices"] = get_random_rule_choices(AVAILABLE_RULES)
+          game_state["nextTurnWithNewRules"] = game_state["currentTurn"] + 3
+
+        print('game_state["nextTurnWithNewRules"]', game_state["nextTurnWithNewRules"])
+
         # Handle actions
         if action == "INCREMENT_TURN" or action == "NEXT_TURN":
           next_turn()
@@ -177,29 +253,7 @@ class ChessServerHandler(BaseHTTPRequestHandler):
           game_state["currentTurn"] = 1
           game_state["currentPlayer"] = "white"
           game_state["currentRules"] = []
-          game_state["newRuleChoices"] = [
-            {
-              "title": "Backwards Movement",
-              "description": "Pieces can move backwards",
-              "isInstant": False,
-              "turnsLeft": 3,
-              "kingImmune": False,
-            },
-            {
-              "title": "Double Jump",
-              "description": "You can jump twice in one turn",
-              "isInstant": False,
-              "turnsLeft": 5,
-              "kingImmune": True,
-            },
-            {
-              "title": "Teleport King",
-              "description": "King can teleport to any empty square",
-              "isInstant": True,
-              "turnsLeft": 1,
-              "kingImmune": False,
-            },
-          ]
+          game_state["newRuleChoices"] = get_random_rule_choices(AVAILABLE_RULES)
           game_state["nextTurnWithNewRules"] = 5
           print(f"[GET /api/game-state] Reset turns", file=sys.stderr)
                 
@@ -249,8 +303,7 @@ class ChessServerHandler(BaseHTTPRequestHandler):
           return
                 
         # Track the user ID
-        if user_id and action:
-          print("UPDATED USER ID!!!!!!!!", user_id, action)
+        if user_id:
           game_state["lastPlayerToMove"] = user_id
           print(f"[GET /api/turns] Tracked user {user_id}", file=sys.stderr)
                 
@@ -262,30 +315,7 @@ class ChessServerHandler(BaseHTTPRequestHandler):
           game_state["currentTurn"] = 1
           game_state["currentPlayer"] = "white"
           game_state["currentRules"] = []
-          game_state["newRuleChoices"] = [
-            {
-              "title": "Backwards Movement",
-              "description": "Pieces can move backwards",
-              "isInstant": False,
-              "turnsLeft": 3,
-              "kingImmune": False,
-            },
-            {
-              "title": "Double Jump",
-              "description": "You can jump twice in one turn",
-              "isInstant": False,
-              "turnsLeft": 5,
-              "kingImmune": True,
-            },
-            {
-              "title": "Teleport King",
-              "description": "King can teleport to any empty square",
-              "isInstant": True,
-              "turnsLeft": 1,
-              "kingImmune": False,
-            },
-          ]
-          # TODO
+          game_state["newRuleChoices"] =get_random_rule_choices(AVAILABLE_RULES)
           game_state["nextTurnWithNewRules"] = 5
           print(f"[GET /api/turns] Reset turns", file=sys.stderr)
                 
@@ -379,16 +409,14 @@ class ChessServerHandler(BaseHTTPRequestHandler):
             
       # Track the user ID
       if user_id:
-        # print("UPDATED USER ID!!!!!!!!", user_id, action)
-        # game_state["lastPlayerToMove"] = user_id
-
+        game_state["lastPlayerToMove"] = user_id
         print(f"[/api/turns] Tracked move to user {user_id}", file=sys.stderr)
             
       # Handle different actions
       if action == "SELECT_RULE":
         chosen_index = payload.get("chosenIndex")
         if select_rule(chosen_index):
-          next_turn()
+          # next_turn()
           print(f"[/api/turns] Selected rule {chosen_index}, advanced turn", file=sys.stderr)
             
       elif action == "NEXT_TURN" or action == "INCREMENT_TURN":
@@ -398,32 +426,8 @@ class ChessServerHandler(BaseHTTPRequestHandler):
       elif action == "RESET_TURNS":
         game_state["currentTurn"] = 1
         game_state["currentPlayer"] = "white"
-        # TODO
         game_state["currentRules"] = []
-        # TODO
-        game_state["newRuleChoices"] = [
-          {
-            "title": "Backwards Movement",
-            "description": "Pieces can move backwards",
-            "isInstant": False,
-            "turnsLeft": 3,
-            "kingImmune": False,
-          },
-          {
-            "title": "Double Jump",
-            "description": "You can jump twice in one turn",
-            "isInstant": False,
-            "turnsLeft": 5,
-            "kingImmune": True,
-          },
-          {
-            "title": "Teleport King",
-            "description": "King can teleport to any empty square",
-            "isInstant": True,
-            "turnsLeft": 1,
-            "kingImmune": False,
-          },
-        ]
+        game_state["newRuleChoices"] = get_random_rule_choices(AVAILABLE_RULES)
         game_state["nextTurnWithNewRules"] = 5
         print(f"[/api/turns] Reset turns to initial state", file=sys.stderr)
             
@@ -469,31 +473,31 @@ class ChessServerHandler(BaseHTTPRequestHandler):
         
     # If client sends board state update, process it
     new_state = data.get("newState")
-    board_changed = False
+    # board_changed = False
         
-    if new_state:
-      piece_count = 0
-      for piece_id, piece_data in new_state.items():
-        if piece_id not in ["boardEffects", "highlightedSquare", "selectedSlot"]:
-          # Check if this piece's position changed
-          old_piece = game_state["boardState"].get(piece_id, {})
-          if old_piece.get("position") != piece_data.get("position"):
-            board_changed = True
+    # if new_state:
+    #   # piece_count = 0
+    #   # for piece_id, piece_data in new_state.items():
+    #   #   if piece_id not in ["boardEffects", "highlightedSquare", "selectedSlot"]:
+    #   #     # Check if this piece's position changed
+    #   #     old_piece = game_state["boardState"].get(piece_id, {})
+    #   #     if old_piece.get("position") != piece_data.get("position"):
+    #   #       board_changed = True
                     
-          game_state["boardState"][piece_id] = piece_data
-          piece_count += 1
+    #   #     game_state["boardState"][piece_id] = piece_data
+    #   #     piece_count += 1
             
-      print(f"[Game State Update] User {user_id} sent {piece_count} pieces, board_changed={board_changed}", file=sys.stderr)
+    #   # print(f"[Game State Update] User {user_id} sent {piece_count} pieces, board_changed={board_changed}", file=sys.stderr)
             
-      # Track which player made this move
-      if board_changed:
-        game_state["lastPlayerToMove"] = user_id
-        print(f"[Last Move] Tracked to player {user_id}", file=sys.stderr)
-            
-      # Auto-advance turn if board state changed (opponent made a move)
-      if board_changed:
-        next_turn()
-        print(f"[Turn Advanced] Now {game_state['currentPlayer']}'s turn (Turn {game_state['currentTurn']})", file=sys.stderr)
+    #   # Track which player made this move
+    #   # Save current board state before advancing turn
+    #   save_board_state()
+    #   game_state["lastPlayerToMove"] = user_id
+    #   print(f"[Last Move] Tracked to player {user_id}", file=sys.stderr)
+          
+    #   # Auto-advance turn if board state changed (opponent made a move)
+    #   # next_turn()
+    #   print(f"[Turn Advanced] Now {game_state['currentPlayer']}'s turn (Turn {game_state['currentTurn']})", file=sys.stderr)
         
     # Handle explicit actions (SELECT_RULE, etc)
     action = data.get("action")
@@ -502,7 +506,6 @@ class ChessServerHandler(BaseHTTPRequestHandler):
     if action == "SELECT_RULE":
       chosen_index = payload.get("chosenIndex")
       if select_rule(chosen_index):
-        next_turn()
         print(f"[handle_game_state] Selected rule {chosen_index}, advanced turn", file=sys.stderr)
         
     elif action == "NEXT_TURN" or action == "INCREMENT_TURN":
@@ -513,31 +516,9 @@ class ChessServerHandler(BaseHTTPRequestHandler):
       game_state["currentTurn"] = 1
       game_state["currentPlayer"] = "white"
       game_state["currentRules"] = []
-      game_state["newRuleChoices"] = [
-        {
-          "title": "Backwards Movement",
-          "description": "Pieces can move backwards",
-          "isInstant": False,
-          "turnsLeft": 3,
-          "kingImmune": False,
-        },
-        {
-          "title": "Double Jump",
-          "description": "You can jump twice in one turn",
-          "isInstant": False,
-          "turnsLeft": 5,
-          "kingImmune": True,
-        },
-        {
-          "title": "Teleport King",
-          "description": "King can teleport to any empty square",
-          "isInstant": True,
-          "turnsLeft": 1,
-          "kingImmune": False,
-        },
-      ]
-      game_state["nextTurnWithNewRules"] = 5
-      print(f"[handle_game_state] Reset turns to initial state", file=sys.stderr)
+      game_state["newRuleChoices"] = get_random_rule_choices(AVAILABLE_RULES)
+      game_state["nextTurnWithNewRules"] = 3
+      print(f"[handle_game_state] Reset turns to initial state with new random rules", file=sys.stderr)
         
     # Return combined state
     board_pieces = {k: v for k, v in game_state["boardState"].items()}
@@ -551,7 +532,7 @@ class ChessServerHandler(BaseHTTPRequestHandler):
           "currentTurn": game_state["currentTurn"],
           "currentPlayer": game_state["currentPlayer"],
           "currentRules": game_state["currentRules"],
-          "newRuleChoices": game_state["newRuleChoices"],
+          # "newRuleChoices": game_state["newRuleChoices"],
           "nextTurnWithNewRules": game_state["nextTurnWithNewRules"],
           "justSelectedRule": action == "SELECT_RULE",
         },
@@ -595,6 +576,34 @@ class ChessServerHandler(BaseHTTPRequestHandler):
       "userId": user_id,
       "boardState": board_pieces,
     })
+    
+  def handle_undo(self, data):
+    """Handle /api/undo - restore previous board state"""
+    global game_state
+    client_secret = data.get("clientSecret")
+        
+    # Verify authentication
+    if client_secret != GAME_PASSWORD:
+      self.send_json_response({"success": False, "message": "Unauthorized"})
+      return
+        
+    # Try to undo the last move
+    if undo_board_state():
+      board_pieces = {k: v for k, v in game_state["boardState"].items()}
+      print(f"[Undo] Successfully restored previous state with {len(board_pieces)} pieces", file=sys.stderr)
+      self.send_json_response({
+        "success": True,
+        "message": "Board state restored",
+        "boardState": board_pieces,
+        "historySize": len(board_state_history),
+      })
+    else:
+      print(f"[Undo] No previous state to restore", file=sys.stderr)
+      self.send_json_response({
+        "success": False,
+        "message": "No previous board state to restore",
+        "historySize": 0,
+      })
     
   def send_json_response(self, data):
     """Send a JSON response"""

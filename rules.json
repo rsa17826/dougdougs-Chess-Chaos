@@ -1,11 +1,382 @@
 {
   "rules": [
     {
-      "title": "a",
-      "description": "s",
+      "title": "Risk it Rook",
+      "description": "50% chance for a free Rook in a random empty square. Your opponent gets 25% chance for the same thing.",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Anti-Camping",
+      "description": "Pick an enemy Piece, swap it with a random friendly Piece",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Estrogen",
+      "description": "Your King can move like 2 Queens",
       "isInstant": false,
-      "turnsLeft": 22,
+      "turnsLeft": [1],
       "kingImmune": true
+    },
+    {
+      "title": "Invulnerability Potion",
+      "description": "Two random Pieces on your team cannot die",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Sunday School",
+      "description": "Do random Sporcle quiz on religion, whoever's better gets a Bishop in chosen empty square",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "The Enemy is Routed",
+      "description": "All enemy Pieces move one square backwards (if open)",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Horse 1 Always Wins",
+      "description": "Watch a horse race, whoever's horse places higher gets a Knight in a chosen empty square",
+      "isInstant": true,
+      "turnsLeft": [1, 6, 9],
+      "kingImmune": false
+    },
+    {
+      "title": "Column Swap",
+      "description": "All Pieces in two random columns are swapped",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Mr Freeze",
+      "description": "Pick 1 column, All Pieces in it are frozen",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Short Stop",
+      "description": "Pieces may move a maximum of 1 square per turn",
+      "isInstant": false,
+      "turnsLeft": [5],
+      "kingImmune": false
+    },
+    {
+      "title": "God Kings",
+      "description": "Kings are immune and can move 2 squares at once",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": true
+    },
+    {
+      "title": "Back That Shit Up",
+      "description": "All Pawns move backward one square (if open)",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Born Again Christian",
+      "description": "All Queens becomes Bishops",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Nuclear Fallout",
+      "description": "2 random empty squares cannot be entered or crossed for the rest of the game",
+      "isInstant": false,
+      "turnsLeft": [999],
+      "kingImmune": false
+    },
+    {
+      "title": "Hobbit Slaughter",
+      "description": "Only Pawns can die",
+      "isInstant": false,
+      "turnsLeft": [3, 6],
+      "kingImmune": false
+    },
+    {
+      "title": "2 Kids in a Trenchcoat",
+      "description": "Sacrifice 2 Pawns to put a new Bishop anywhere on the board",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Going Woke",
+      "description": "All Pieces in the right half of the board get pushed to the left 1 square (if open)",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Summoning Ritual",
+      "description": "When this expires, whichever Player has more Pieces on the 4 corner spots gets a Rook at a chosen empty square",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "They Deserved It",
+      "description": "One random non-King Piece is killed",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Bottomless Pit",
+      "description": "Pick an empty square. For the rest of the game, any Piece who enters it dies",
+      "isInstant": false,
+      "turnsLeft": [999],
+      "kingImmune": false
+    },
+    {
+      "title": "Mitosis",
+      "description": "Pick a Piece. It cannot move, but if it's alive when this rule expires, spawn a duplicate of the Piece into an empty adjacent square",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "No Cowards",
+      "description": "All moves must move closer to your opponent's side of the board",
+      "isInstant": false,
+      "turnsLeft": [5, 7, 9],
+      "kingImmune": false
+    },
+    {
+      "title": "Minefield",
+      "description": "Mark 2 random empty squares. If a Piece enters that square, they die and the mine is removed",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Treasure Chest",
+      "description": "Select a random empty square. The first Piece to enter that square is promoted",
+      "isInstant": false,
+      "turnsLeft": [6],
+      "kingImmune": false
+    },
+    {
+      "title": "Portal 3",
+      "description": "Pick 2 squares. At the end of every turn, those two squares swap",
+      "isInstant": false,
+      "turnsLeft": [8],
+      "kingImmune": false
+    },
+    {
+      "title": "Living Bomb",
+      "description": "Pick a friendly Piece. If it's alive when this rule expires, it explodes and kills all adjacent pieces",
+      "isInstant": false,
+      "turnsLeft": [6, 8, 9],
+      "kingImmune": false
+    },
+    {
+      "title": "Drafted for Battle",
+      "description": "Both Players swap their King with a friendly Bishop or Knight of their choice",
+      "isInstant": false,
+      "turnsLeft": [5],
+      "kingImmune": false
+    },
+    {
+      "title": "Severe Constipation",
+      "description": "Bishops and Knights cannot move",
+      "isInstant": false,
+      "turnsLeft": [6],
+      "kingImmune": false
+    },
+    {
+      "title": "Pacman Style",
+      "description": "Pieces can wrap around the right and left sides of the board",
+      "isInstant": false,
+      "turnsLeft": [9],
+      "kingImmune": false
+    },
+    {
+      "title": "Hobbit Battle",
+      "description": "Only Pawns can be moved",
+      "isInstant": false,
+      "turnsLeft": [6],
+      "kingImmune": false
+    },
+    {
+      "title": "Second Chance",
+      "description": "When any Piece dies, 50% chance it is revived in a random empty square",
+      "isInstant": false,
+      "turnsLeft": [3, 5],
+      "kingImmune": false
+    },
+    {
+      "title": "Cash Grab",
+      "description": "Any Piece that reaches the back line can promote",
+      "isInstant": false,
+      "turnsLeft": [5],
+      "kingImmune": false
+    },
+    {
+      "title": "Gigachad Aura",
+      "description": "When this expires, all Pieces adjacent to a King die",
+      "isInstant": false,
+      "turnsLeft": [5],
+      "kingImmune": false
+    },
+    {
+      "title": "Get Up In Their Face",
+      "description": "All your Pieces slide forward until they hit an empty square",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "CHAAAARGE!",
+      "description": "All your Pieces move one square towards the enemy (if open)",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Tornado",
+      "description": "Pick an empty square. If any Piece can move to that square, it must",
+      "isInstant": false,
+      "turnsLeft": [8],
+      "kingImmune": false
+    },
+    {
+      "title": "Kamikaze",
+      "description": "When a Piece dies, 25% chance that ALL adjacent Pieces die",
+      "isInstant": false,
+      "turnsLeft": [8],
+      "kingImmune": false
+    },
+    {
+      "title": "Blood Sacrifice",
+      "description": "Players pick one of their own pieces to die after every turn",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Early Promotion",
+      "description": "Pawns promote on the 6th row instead of the 8th",
+      "isInstant": false,
+      "turnsLeft": [6],
+      "kingImmune": false
+    },
+    {
+      "title": "Call Down Lightning",
+      "description": "Mark a random empty square. When this expires, whoever controls that square chooses an enemy piece to die",
+      "isInstant": false,
+      "turnsLeft": [3, 4, 9],
+      "kingImmune": false
+    },
+    {
+      "title": "Hot Drop",
+      "description": "Each Player gets a Queen in a random open square (they cannot attack King this turn)",
+      "isInstant": true,
+      "turnsLeft": [1, 5],
+      "kingImmune": false
+    },
+    {
+      "title": "Ice Age",
+      "description": "Pieces in columns 1 and 8 are frozen",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Bloodthirsty",
+      "description": "You must make a move that captures an enemy (if possible)",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Moving Up the Corporate Ladder",
+      "description": "Pick 2 Pieces in the same column, then swap them",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Portal Storm",
+      "description": "Two random non-King Pieces swap places at the end of every turn",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "March of the Pawnguins",
+      "description": "All Pawns advance one square if it's empty (no captures)",
+      "isInstant": true,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Parry",
+      "description": "Rock Paper Scissors for a chance to stop any attack",
+      "isInstant": false,
+      "turnsLeft": [5],
+      "kingImmune": false
+    },
+    {
+      "title": "Get The Fuck Off",
+      "description": "Pick 2 squares on the board. When this expires, any Pieces on those squares die",
+      "isInstant": false,
+      "turnsLeft": [5],
+      "kingImmune": false
+    },
+    {
+      "title": "Down with the Ship",
+      "description": "Any capture also kills the capturing Piece",
+      "isInstant": false,
+      "turnsLeft": [6],
+      "kingImmune": false
+    },
+    {
+      "title": "Critical Strike",
+      "description": "Every capture has a 50% chance to capture a random adjacent enemy Piece",
+      "isInstant": false,
+      "turnsLeft": [5, 7],
+      "kingImmune": false
+    },
+    {
+      "title": "Time Bomb",
+      "description": "All Pieces in Column E die when this rule expires",
+      "isInstant": false,
+      "turnsLeft": [6],
+      "kingImmune": false
+    },
+    {
+      "title": "Religious Conversion",
+      "description": "If a Bishop moves next to an enemy Pawn, you convert it to your team",
+      "isInstant": false,
+      "turnsLeft": [7],
+      "kingImmune": false
+    },
+    {
+      "title": "Sophie's Choice",
+      "description": "Each player selects 2 random friendly Pieces, then picks one to kill",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
+    },
+    {
+      "title": "Hurricane",
+      "description": "Pick 1 row, all Pieces in it are pushed to the leftmost empty square",
+      "isInstant": false,
+      "turnsLeft": [1],
+      "kingImmune": false
     }
   ]
 }
