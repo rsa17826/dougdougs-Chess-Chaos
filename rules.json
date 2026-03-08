@@ -1,0 +1,11 @@
+{
+  "rules": [
+    {
+      "title": "a",
+      "description": "s",
+      "isInstant": false,
+      "turnsLeft": 22,
+      "kingImmune": true
+    }
+  ]
+}
