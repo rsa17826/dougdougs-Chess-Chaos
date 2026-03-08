@@ -398,7 +398,9 @@ class ChessServerHandler(BaseHTTPRequestHandler):
       elif action == "RESET_TURNS":
         game_state["currentTurn"] = 1
         game_state["currentPlayer"] = "white"
+        # TODO
         game_state["currentRules"] = []
+        # TODO
         game_state["newRuleChoices"] = [
           {
             "title": "Backwards Movement",

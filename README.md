@@ -18,3 +18,5 @@ Edit these in `chess_server.py`:
 GAME_PASSWORD = "password123"  # Change this to your desired password
 PORT = 8000                     # Change this if port 8000 is in use
 ```
+new rules every 3 turns
+add password caching to be better than doug
