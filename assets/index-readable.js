@@ -3644,17 +3644,20 @@ function yi() {
                         window.detachEvent("onunload", n)
                     }
                   },
+                  // randomInt(n) {
+                  //   return Math.floor(
+                  //     (function () {
+                  //       return (
+                  //         (
+                  //           window.crypto || window.msCrypto
+                  //         ).getRandomValues(new Uint32Array(1))[0] /
+                  //         Math.pow(2, 32)
+                  //       )
+                  //     })() * n
+                  //   )
+                  // },
                   randomInt(n) {
-                    return Math.floor(
-                      (function () {
-                        return (
-                          (
-                            window.crypto || window.msCrypto
-                          ).getRandomValues(new Uint32Array(1))[0] /
-                          Math.pow(2, 32)
-                        )
-                      })() * n
-                    )
+                    return Math.floor(Math.random() * n)
                   },
                 },
                 R = Dr,
@@ -5092,7 +5095,7 @@ function q() {
   let i = localStorage.getItem("userId")
   return (
     i ||
-      ((i = crypto.randomUUID()), localStorage.setItem("userId", i)),
+      ((i = String(Math.random())), localStorage.setItem("userId", i)),
     i
   )
 }
@@ -6510,10 +6513,9 @@ function nn(i = "") {
 }
 const bs = document.getElementById("password-form")
 async function subpass(i) {
-  if (i)
-  i.preventDefault()
+  if (i) i.preventDefault()
   H = document.getElementById("password-input").value
-  localStorage.p=H
+  localStorage.p = H
   const o = await bt("/api/auth", {
     clientSecret: H,
   })
@@ -6526,8 +6528,8 @@ async function subpass(i) {
       "Invalid Password!"
   }
 }
-if (localStorage.p){
-  document.getElementById("password-input").value=localStorage.p
+if (localStorage.p) {
+  document.getElementById("password-input").value = localStorage.p
   subpass()
 }
 bs.addEventListener("submit", subpass)
