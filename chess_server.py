@@ -285,6 +285,7 @@ class ChessServerHandler(BaseHTTPRequestHandler):
               "kingImmune": False,
             },
           ]
+          # TODO
           game_state["nextTurnWithNewRules"] = 5
           print(f"[GET /api/turns] Reset turns", file=sys.stderr)
                 
